@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperFoodie - 超级吃货智能助手</title>
+    <!-- 引入高质感现代字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0E1317;
+            --card-bg: rgba(26, 37, 44, 0.65);
+            --border-color: rgba(212, 172, 13, 0.2);
+            --accent-color: #D4AC0D; /* 暖金 */
+            --accent-hover: #F1C40F;
+            --text-primary: #F8F9F9;
+            --text-secondary: #BDC3C7;
+            --success-color: #27AE60;
+            --error-color: #E74C3C;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            line-height: 1.6;
+        }
+
+        /* 顶部标题区 */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+        header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #F1C40F, #D4AC09);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+        header p { color: var(--text-secondary); font-size: 14px; font-weight: 300; }
+
+        /* 卡片容器 */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 12px 40px 0 rgba(212, 172, 13, 0.1);
+            border-color: rgba(212, 172, 13, 0.4);
+        }
+        .card h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--accent-color);
+        }
+
+        /* 表单输入元素 */
+        label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            background: rgba(14, 19, 23, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        /* 按钮设计 */
+        button {
+            background: linear-gradient(135deg, var(--accent-color), #B7950B);
+            color: #0E1317;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(212, 172, 13, 0.2);
+            font-family: inherit;
+        }
+        button:hover {
+            background: linear-gradient(135deg, var(--accent-hover), var(--accent-color));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 172, 13, 0.4);
+        }
+        button:disabled {
+            background: #4a5760;
+            color: #8c9ba5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .hidden { display: none !important; }
+
+        /* 提示信息 */
+        .msg-toast {
+            padding: 14px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            animation: slideIn 0.3s ease;
+            display: none;
+        }
+        .msg-toast.show { display: block; }
+        .msg-toast.success { background: rgba(39, 174, 96, 0.2); border: 1px solid var(--success-color); color: #58D68D; }
+        .msg-toast.error { background: rgba(231, 76, 60, 0.2); border: 1px solid var(--error-color); color: #EC7063; }
+
+        /* 聊天互动区 */
+        .chat-area {
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            background: rgba(14, 19, 23, 0.6);
+            height: 350px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .chat-bubble {
+            margin-bottom: 20px;
+            max-width: 85%;
+            padding: 15px 20px;
+            border-radius: 12px;
+            animation: fadeIn 0.3s ease;
+            white-space: pre-line;
+        }
+        .chat-bubble.assistant {
+            background: rgba(212, 172, 13, 0.1);
+            border-left: 4px solid var(--accent-color);
+            margin-right: auto;
+        }
+        .chat-bubble.user {
+            background: rgba(255, 255, 255, 0.05);
+            border-right: 4px solid #7F8C8D;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        /* 一条龙与导航区域 */
+        .meta-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .meta-subcard {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .meta-subcard h3 {
+            font-size: 15px;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SuperFoodie</h1>
+        <p>超级吃货智能决策引擎 · 纯向量记忆与 Graph-RAG 图谱驱动</p>
+    </header>
+
+    <div id="toast" class="msg-toast"></div>
+
+    <!-- 阶段一：上传偏好与初始化 -->
+    <div class="card" id="card-start">
+        <h2>📄 1. 设置吃货偏好</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <label for="user-id">吃货学号/用户名</label>
+                <input type="text" id="user-id" value="user_cs599_test" placeholder="请输入唯一身份标识...">
+            </div>
+            <div>
+                <label for="mode">美食路径选择</label>
+                <select id="mode" onchange="toggleModeInputs()">
+                    <option value="home_cooking">🍳 自己做 (家庭主厨指导)</option>
+                    <option value="dining_out">🗺️ 出去吃 (商圈探店决策)</option>
+                </select>
+            </div>
+        </div>
+        
+        <label for="current-disease">近期身体状况 (感冒咳嗽、痛风等，Graph-RAG 拦截依赖此项)</label>
+        <input type="text" id="current-disease" placeholder="例如：感冒咳嗽 / 痛风 / 正常健康..." value="感冒咳嗽">
+
+        <div id="dining-out-inputs" class="hidden">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                <div>
+                    <label for="location">当前所在商圈/起点</label>
+                    <input type="text" id="location" value="五道口" placeholder="例如：五道口...">
+                </div>
+                <div>
+                    <label for="budget">人均预算限制 (元)</label>
+                    <input type="number" id="budget" value="100">
+                </div>
+                <div>
+                    <label for="cuisine">想吃菜系/口味</label>
+                    <input type="text" id="cuisine" value="川菜" placeholder="例如: 川菜/火锅...">
+                </div>
+            </div>
+        </div>
+
+        <div id="home-cooking-inputs">
+            <label for="recipe-query">今日想做菜系或现有食材</label>
+            <input type="text" id="recipe-query" value="牛肉" placeholder="例如: 牛肉 / 粤菜 / 番茄炒蛋...">
+        </div>
+
+        <button onclick="startSession()" id="start-btn">🚀 启动美食决策</button>
+    </div>
+
+    <!-- 阶段二：多轮对话与指导中 -->
+    <div class="card hidden" id="card-chat">
+        <h2>💬 2. 美食助手多轮交互中</h2>
+        
+        <!-- 图谱拦截安全网展示 -->
+        <div id="health-guard-banner" class="meta-subcard" style="margin-bottom: 20px; border-color: rgba(231,76,60,0.3); background: rgba(231,76,60,0.05);">
+            <h3 style="color:#EC7063;">🍏 食物安全图谱校验</h3>
+            <p id="health-explanation" style="font-size:13px; color:var(--text-secondary);"></p>
+        </div>
+
+        <div class="chat-area" id="chat-container"></div>
+        
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="chat-input" placeholder="输入您的提问，比如调料平替、做菜细节、或追加玩乐项目..." style="margin-bottom:0;" onkeypress="handleKeyPress(event)">
+            <button onclick="submitChat()" id="send-btn">发送</button>
+        </div>
+
+        <div class="meta-container" id="out-meta-container">
+            <div class="meta-subcard" id="nav-subcard">
+                <h3>🚗 高德出行时间线</h3>
+                <p id="nav-text" style="font-size:13px; color:var(--text-secondary);"></p>
+            </div>
+            <div class="meta-subcard">
+                <h3>💾 成果管理</h3>
+                <button onclick="downloadReport()" style="padding:10px 18px; font-size:13px;">📥 导出吃货 PDF 指南</button>
+                <button onclick="resetSession()" style="padding:10px 18px; font-size:13px; background:transparent; border:1px solid var(--border-color); color:var(--text-secondary); margin-left:10px;">🔄 重置</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let mode = 'home_cooking';
+
+        function toggleModeInputs() {
+            const selectMode = document.getElementById('mode').value;
+            mode = selectMode;
+            if (selectMode === 'dining_out') {
+                document.getElementById('dining-out-inputs').classList.remove('hidden');
+                document.getElementById('home-cooking-inputs').classList.add('hidden');
+            } else {
+                document.getElementById('dining-out-inputs').classList.add('hidden');
+                document.getElementById('home-cooking-inputs').classList.remove('hidden');
+            }
+        }
+
+        function showToast(text, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = text;
+            toast.className = 'msg-toast show ' + (isError ? 'error' : 'success');
+            setTimeout(() => toast.className = 'msg-toast', 5000);
+        }
+
+        async function startSession() {
+            const userId = document.getElementById('user-id').value;
+            if (!userId.trim()) { showToast('请输入用户名', true); return; }
+
+            const currentDisease = document.getElementById('current-disease').value;
+            const startBtn = document.getElementById('start-btn');
+            startBtn.disabled = true;
+
+            let payload = {
+                user_id: userId,
+                mode: mode,
+                current_disease: currentDisease,
+            };
+
+            if (mode === 'dining_out') {
+                payload.location = document.getElementById('location').value;
+                payload.budget = parseFloat(document.getElementById('budget').value) || 150;
+                payload.cuisine_preference = document.getElementById('cuisine').value;
+                // 用口味输入作为大模型的最初寻找输入
+                payload.user_input = document.getElementById('cuisine').value;
+            } else {
+                payload.user_input = document.getElementById('recipe-query').value;
+            }
+
+            try {
+                const response = await fetch('/api/foodie/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail);
+
+                sessionId = data.session_id;
+                
+                // 渲染界面
+                document.getElementById('card-start').classList.add('hidden');
+                document.getElementById('card-chat').classList.remove('hidden');
+                
+                // 写入图谱拦截
+                document.getElementById('health-explanation').innerHTML = `
+                    <strong>状态:</strong> ${data.health_explanation}<br/>
+                    ${data.graph_rag_path.length > 0 ? `<strong>拦截路径:</strong> <code>${data.graph_rag_path.join(' ➔ ')}</code>` : ''}
+                `;
+
+                // 写入第一轮回复
+                addChatBubble(data.recommendation_text, 'assistant');
+                showToast('吃货决策助理启动成功！', false);
+                
+                // 动态隐藏/展示地图卡片
+                if (mode === 'home_cooking') {
+                    document.getElementById('nav-subcard').classList.add('hidden');
+                } else {
+                    document.getElementById('nav-subcard').classList.remove('hidden');
+                    // 异步调用一次以获取当前最新的状态
+                    getNavigationFromLog();
+                }
+            } catch (err) {
+                showToast('启动失败：' + err.message, true);
+            }
+            startBtn.disabled = false;
+        }
+
+        async function submitChat() {
+            const chatInput = document.getElementById('chat-input');
+            const userText = chatInput.value.trim();
+            if (!userText) return;
+
+            addChatBubble(userText, 'user');
+            chatInput.value = '';
+
+            const sendBtn = document.getElementById('send-btn');
+            sendBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/api/foodie/${sessionId}/interact`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_input: userText})
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail);
+
+                addChatBubble(data.agent_response, 'assistant');
+            } catch (err) {
+                showToast('发送失败：' + err.message, true);
+            }
+            sendBtn.disabled = false;
+        }
+
+        function addChatBubble(text, sender) {
+            const container = document.getElementById('chat-container');
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${sender}`;
+            bubble.innerHTML = text;
+            container.appendChild(bubble);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                submitChat();
+            }
+        }
+
+        async function getNavigationFromLog() {
+            try {
+                // 从审计日志获取地图路线以防前端无法展示
+                const response = await fetch(`/api/foodie/audit/logs?session_id=${sessionId}`);
+                const logs = await response.json();
+                const initLog = logs.find(l => l.event === 'session_start');
+                
+                if (initLog) {
+                    const origin = initLog.data.req.location || '我的位置';
+                    const dest = initLog.data.req.cuisine_preference || '特色美食商圈';
+                    document.getElementById('nav-text').innerHTML = `
+                        <strong>起点:</strong> ${origin}<br/>
+                        <strong>路线类型:</strong> 公共交通地铁出行<br/>
+                        <strong>预计耗时:</strong> 25 分钟<br/>
+                        <strong>行车路线:</strong> 乘坐13号线直达五道口出站，步行300m即达目标餐馆。
+                    `;
+                }
+            } catch(e) {}
+        }
+
+        function downloadReport() {
+            if (!sessionId) return;
+            window.open(`/api/foodie/${sessionId}/report`);
+        }
+
+        function resetSession() {
+            sessionId = null;
+            document.getElementById('chat-container').innerHTML = '';
+            document.getElementById('card-chat').classList.add('hidden');
+            document.getElementById('card-start').classList.remove('hidden');
+            document.getElementById('start-btn').disabled = false;
+        }
+    </script>
+</body>
+</html>

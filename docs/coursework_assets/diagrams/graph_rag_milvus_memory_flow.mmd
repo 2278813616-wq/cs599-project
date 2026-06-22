@@ -1,9 +1,0 @@
-flowchart TB
-    OBS[Obsidian Markdown 规则库] --> GR[Graph-RAG 检索器]
-    GR --> SAFE[健康与食品安全校验屏障]
-    MIL[Milvus / 模拟向量数据库] --> RECENT[近期用餐足迹历史]
-    RECENT --> DEDUP[语义去重与偏好过滤]
-    SAFE --> AGENT[智能体决策与过滤排序]
-    DEDUP --> AGENT
-    UI[用户最终确认或 PDF 导出] --> WRITE[强意图信号写入 +1]
-    WRITE --> MIL

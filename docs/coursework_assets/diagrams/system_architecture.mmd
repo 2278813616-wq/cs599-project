@@ -1,9 +1,0 @@
-flowchart TB
-    U[Web 前端] --> API[FastAPI API 层]
-    API --> AG[LangGraph Agent Core]
-    AG --> TOOLS[Tools Adapter]
-    TOOLS --> XHS[小红书/社交内容检索]
-    TOOLS --> AMAP[高德地图 API]
-    TOOLS --> RAG[Obsidian Graph-RAG]
-    TOOLS --> MEM[Milvus 长期记忆]
-    AG --> PDF[ReportLab PDF 导出]

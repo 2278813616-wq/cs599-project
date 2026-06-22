@@ -14,7 +14,8 @@
       "mode": "home_cooking", 
       "current_disease": "感冒咳嗽",
       "dining_people_count": 3,
-      "cuisine_preference": "粤菜"
+      "location": "五道口",
+      "budget": 150.0
     }
     ```
 *   **响应体 (Response JSON)**：
@@ -22,14 +23,29 @@
     {
       "session_id": "session-1717400000",
       "mode": "home_cooking",
-      "first_recommendation": "为您推荐了三道菜：白切鸡、清蒸鲈鱼、香菇菜心。已自动拦截温热辛辣食物。",
-      "shopping_list": ["三黄鸡半只", "鲈鱼1条", "香菇200g", "菜心300g"],
-      "missing_condiments": ["葱", "姜", "生抽"],
-      "health_warnings": ["提示：当前有感冒，请避免姜丝中放入过多胡椒。"]
+      "recommendation_text": "【超级吃货智能主厨推荐】为您推荐：经典番茄炒蛋 + 香菇菜心 + 番茄蛋花汤（3人份）。\n...",
+      "health_explanation": "安全：已自动过滤辛辣温热发物。",
+      "graph_rag_path": [],
+      "report_path": "docs/reports/session-1717400000_report.pdf",
+      "image_url": "/images/classic_tomato_egg.png",
+      "source": "下厨房"
     }
     ```
 
-### 1.2 【POST】多轮对话与决策 (Interact Session)
+### 1.2 【GET】获取系统诊断状态 (System Diagnostics)
+*   **路径**：`/api/foodie/system/status`
+*   **描述**：获取当前系统核心连接（大模型、向量数据库、地图服务）是在线可用还是降级备用状态。
+*   **响应体 (Response JSON)**：
+    ```json
+    {
+      "llm": "online",
+      "milvus": "offline_mock_json",
+      "gaode": "mock_estimation",
+      "platform_fetch_todo": ["小红书接口获取受限 (使用Mock数据与预置图文)"]
+    }
+    ```
+
+### 1.3 【POST】多轮对话与决策 (Interact Session)
 *   **路径**：`/api/foodie/{session_id}/interact`
 *   **描述**：用户输入回答、中途提问或要求平替，Agent 推理后返回下一步动作。
 *   **请求体 (Request JSON)**：

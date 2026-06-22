@@ -1,0 +1,9 @@
+flowchart LR
+    B[用户浏览器] --> R[Render 免费 Web 云服务]
+    R --> API[FastAPI 后端 + 静态前端资源托管]
+    API --> LLM[DeepSeek 大模型接口]
+    API --> AMAP[高德地图接口]
+    API --> TAV[Tavily 搜索接口]
+    API --> MOCK[模拟 Milvus / 本地 JSON 数据库备份]
+    API -.线上生产模式默认禁用.-> XHS[小红书真实 Cookie 模式<br/>AIONE_ENABLED=0]
+    R --> ENV[Render 环境变量配置管理<br/>无需本地 Cookie 上传]

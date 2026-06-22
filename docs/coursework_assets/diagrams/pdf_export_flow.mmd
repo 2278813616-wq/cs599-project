@@ -1,0 +1,10 @@
+flowchart TD
+    UI[前端点击导出 PDF 按钮] --> SYNC[同步前端用户已选项目]
+    SYNC --> STATE[读取当前会话活跃状态]
+    STATE --> MODE{选择模式}
+    MODE -->|自己做 home_cooking| HOME[包含：菜谱成品图 + 食材明细 + 调料用量 + 详细步骤]
+    MODE -->|出去吃 dining_out| OUT[包含：选定餐厅 + 推荐主打菜 + 详细地址 + 餐后娱乐活动]
+    HOME --> RL[ReportLab 渲染生成器]
+    OUT --> RL
+    RL --> PDF[保存文件至 docs/reports/session_report.pdf]
+    PDF --> MEM[最终选择及足迹同步写入 Milvus]

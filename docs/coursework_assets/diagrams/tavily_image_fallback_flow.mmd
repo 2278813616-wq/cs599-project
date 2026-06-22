@@ -1,0 +1,9 @@
+flowchart TD
+    DS[DeepSeek 结构化菜谱数据] --> TV[Tavily 联网搜索引擎<br/>限图片搜索]
+    TV --> IMG[收集抓取到的图片 URL]
+    IMG --> FILTER[过滤图标、头像、二维码及死链]
+    FILTER --> PROXY[FastAPI 图片代理路由转发]
+    PROXY --> CACHE[内存级代理图片缓存]
+    CACHE --> UI[渲染至菜谱卡片展示]
+    FILTER -->|未获取到安全图片| LOCAL[本地预制分类图片模板兜底]
+    LOCAL --> UI

@@ -1,0 +1,36 @@
+CS599 SuperFoodie 测试与性能摘要
+
+环境：
+- Windows / Python venv
+- 核心命令：.\venv\Scripts\python.exe -m pytest tests/test_map_business_area_api.py tests/test_mcp_server.py tests/test_report_generator.py tests/test_restaurant_agent.py -q
+- 全量命令：.\venv\Scripts\python.exe -m pytest -q
+
+结果：
+- 核心测试：5 passed, 3 warnings，用时约 51.64s
+- 全量测试：21 passed, 1 skipped, 78 warnings，用时约 193.38s
+
+覆盖点：
+- 商圈接口默认瘦身响应：普通请求不返回 raw_results / excluded_results。
+- 商圈接口缓存：同一 query/city/radius/lnglat/explore_new 第二次请求不再调用高德。
+- MCP Server：initialize / tools/list / tools/call 均可返回 JSON-RPC 结果。
+- PDF 生成器：自己做与出去吃两种报告结构均可生成文件。
+- 餐厅 Agent：验证动态候选结构，不再依赖固定店名。
+- 多人餐自动规划：未指定菜名时稳定返回荤菜、素菜、汤槽位。
+
+真实接口性能记录：
+- 优化前：/api/foodie/map/business-areas 无输入 + 5km 周边请求约 19.5s，响应约 267KB。
+- 优化后冷请求：约 5.4s，响应约 8.4KB，debug calls 4。
+- 优化后缓存命中：约 26ms，响应约 8.4KB。
+- debug=true：缓存命中时仍可返回 raw_results / excluded_results，响应约 34KB。
+
+限制：
+- 警告主要来自 PyMilvus ORM API deprecation、Starlette TestClient deprecation 和 datetime.utcnow deprecation，不影响当前 Demo。
+- 小红书评论抓取默认关闭，避免账号风控。
+
+2026-06-21 自己做链路性能优化补充：
+- 明确菜名不再先扩展成 3 个检索词；模糊口味/宽泛食材才扩展。
+- 小红书详情抽取改为有限并发，并默认只让 1 条候选进入 LLM 菜谱结构化。
+- 增加小红书搜索详情缓存与菜谱抽取成功缓存。
+- 弱菜谱正文直接跳过 LLM，避免普通种草短文拖慢链路。
+- 小红书/Tavily 联网候选不足 3 条时，Agent 层使用本地模板补齐展示位，并保留补位来源标识。
+- 实测样例 `/api/foodie/start`，home_cooking + “小炒黄牛肉”：缓存命中后 API 总耗时约 4.9s，返回 3 个推荐；搜索阶段最终约 1.9s。

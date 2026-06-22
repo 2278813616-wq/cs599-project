@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant C as 客户端 (Codex / MCP Client)
+    participant S as 服务端 (SuperFoodie MCP Server)
+    participant R as 检索器 (Graph-RAG Retriever)
+    C->>S: 发送 initialize 请求
+    S-->>C: 返回服务版本信息 (serverInfo) 与工具支持能力
+    C->>S: 发送 tools/list 获取工具列表
+    S-->>C: 返回可用工具清单 (如 query_diet_safety 等)
+    C->>S: 发送 tools/call 执行 query_diet_safety
+    S->>R: 传入用户疾病与检测食物进行图检索
+    R-->>S: 返回安全判定结果与禁忌解释
+    S-->>C: 返回标准 JSON-RPC 格式工具调用结果

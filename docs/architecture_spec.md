@@ -62,13 +62,19 @@
 ┌──────────────┐     ┌──────────────┐     ┌───────────────────┐
 │  output_pdf  │◄────┤  decide_food │◄────┤ deduplicate_filter│
 └──────────────┘     └──────────────┘     └───────────────────┘
+                                                   ▲
+                                                   │ (Tool-Calling Loop)
+                                                   ▼
+                                          ┌───────────────────┐
+                                          │   Tool Execution  │
+                                          └───────────────────┘
 ```
 
 1.  **load_memory 节点**：连接 Milvus，根据 `user_id` 查询长期偏好、忌口及就餐记录，更新至 State。
 2.  **intent_parse 节点**：大厅路由 Agent 解析意图（是否提及“吃红烧肉”等穿透词，属于“做菜”还是“探店”需求）。
 3.  **graph_rag_guard 节点**：读取用户的健康与疾病状态，启动 Obsidian Graph-RAG，分析是否存在食物相克或发物冲突，给出安全警告或拦截条件。
 4.  **deduplicate_filter 节点**：根据 Milvus 元数据中的最近 7 天足迹，过滤候选清单（若用户直接提起则绕过）。
-5.  **decide_food 节点**：`ChefAgent` 或 `GourmetAgent` 结合剩余合规食材/商铺以及 MCP 美食热度，生成做菜细节（含物态火候）或出去吃一条龙列表（甜品+娱乐）。
+5.  **decide_food 节点**：`ChefAgent` 或 `GourmetAgent` 进行任务执行。在此节点中，Agent 并不硬编码调用工具，而是大模型生成 **Function Calling** 意图来选择性调用外部工具（如 Map API、在线食谱搜索），并循环调用执行。
 6.  **output_pdf 节点**：调用 PDF 报表生成器生成可下载的决策文件，并追加 JSONL 审计日志。
 
 ---

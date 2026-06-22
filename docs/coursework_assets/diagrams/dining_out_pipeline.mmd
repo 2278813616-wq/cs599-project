@@ -1,0 +1,12 @@
+flowchart TD
+    U[用户选择出去吃] --> BA[商圈上下文构建]
+    BA --> AMAP[高德地图餐厅 POI 检索]
+    AMAP --> FILTER[高德端评分 + 距离 + 预算过滤]
+    FILTER --> XHS[小红书探店种草数据<br/>成品图 + 推荐菜 + 气氛客观评价]
+    FILTER --> FUN[高德娱乐 POI 检索<br/>餐后娱乐：电影院/网咖/台球/咖啡厅]
+    XHS --> MERGE[高德与小红书多模态信息融合]
+    FUN --> MERGE
+    MERGE --> UI[前端 3 张精致餐厅推荐卡片]
+    UI --> PICK[用户选定最终餐厅]
+    PICK --> PDF[ReportLab 导出出去吃 PDF 报告]
+    PDF --> MEM[向 Milvus 写入强意图餐厅历史]

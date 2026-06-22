@@ -1,0 +1,14 @@
+flowchart TD
+    IN[输入地址、定位或地图选点] --> CENTER[确定地理中心点<br/>高德逆地理编码或浏览器定位]
+    CENTER --> R[确定周边 5 公里半径]
+    R --> KW[高德商圈关键字搜索]
+    R --> AROUND[高德周边商圈 POI 检索]
+    KW --> MERGE[合并重复的商圈 POI]
+    AROUND --> MERGE
+    MERGE --> SCORE[过滤高德评分 > 4.0]
+    SCORE --> EXCLUDE[排除非商业区 POI<br/>过滤住宅区 / 学校 / 便利店 / 交通枢纽]
+    EXCLUDE --> RANK[综合评分与距离排序]
+    RANK --> EXPLORE{开启探索新地图?}
+    EXPLORE -->|是| BOOST[提高去过较少区域的权重]
+    EXPLORE -->|否| LIST[最终商圈候选列表]
+    BOOST --> LIST

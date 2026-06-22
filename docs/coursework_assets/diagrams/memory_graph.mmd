@@ -1,0 +1,8 @@
+flowchart TB
+    OBS[Obsidian Markdown 双向链接] --> GR[Graph-RAG 检索器]
+    GR --> RULES[饮食禁忌/患者食谱/健康提醒]
+    MILVUS[Milvus 向量集合] --> HISTORY[近期用餐历史与会话足迹]
+    RULES --> DECISION[智能体决策与融合排序]
+    HISTORY --> DECISION
+    DECISION --> EXPORT[ReportLab 导出 PDF]
+    EXPORT --> MILVUS

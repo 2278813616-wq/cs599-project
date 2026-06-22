@@ -39,8 +39,11 @@ env/
 
 # Project specific
 .env
+env.local
 logs/
-obsidian_vault/.obsidian/workspace.json
-obsidian_vault/.obsidian/workspace-mobile.json
+volumes/
+docs/reports/
+obsidian_vault/.obsidian/
 *.pdf
+!docs/CS599_大作业报告.pdf
 .pytest_cache/

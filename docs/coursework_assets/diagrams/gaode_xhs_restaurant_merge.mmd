@@ -1,0 +1,6 @@
+flowchart LR
+    AMAP[高德结构化 POI 数据<br/>店名/地址/评分/人均消费/距离/类别] --> MERGE[Restaurant candidate merge]
+    XHS[小红书种子笔记数据<br/>种草图/主打菜/主观推荐理由/热度] --> MERGE
+    MERGE --> RULE[融合策略：以高德数据为基准权威<br/>小红书仅补充视觉与种草氛围]
+    RULE --> CARD[前端推荐餐厅卡片]
+    CARD --> DETAIL[详情侧边栏<br/>门店图文/推荐菜/详细地址/饭后娱乐建议]

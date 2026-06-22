@@ -1,0 +1,14 @@
+flowchart LR
+    INPUT[用户输入] --> PARSE[意图解析]
+    PARSE --> HOME[自己做链路]
+    PARSE --> OUT[出去吃链路]
+    HOME --> XHS_RECIPE[小红书菜谱检索]
+    OUT --> MAP[高德地图 POI 搜索]
+    OUT --> XHS_STORE[小红书探店笔记检索]
+    XHS_RECIPE --> MERGE[LLM 结构化融合]
+    MAP --> MERGE
+    XHS_STORE --> MERGE
+    MERGE --> GUARD[Graph-RAG 健康校验]
+    GUARD --> UI[前端卡片展示]
+    UI --> PDF[ReportLab 导出 PDF]
+    PDF --> MEM[Milvus 足迹写入]

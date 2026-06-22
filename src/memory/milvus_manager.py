@@ -28,18 +28,33 @@ class MilvusManager:
         """
         初始化连接。如果连接失败或缺少包，则自动启用 Mock 本地模拟器。
         """
+        if os.getenv("MILVUS_FORCE_MOCK", "0") == "1":
+            print("【Milvus 测试模式】MILVUS_FORCE_MOCK=1，启用本地模拟降级。")
+            self._load_mock_data()
+            return
+
         if not HAS_PYMILVUS:
             print("【Milvus 警告】未安装 pymilvus 模块，自动启用本地模拟降级。")
             self._load_mock_data()
             return
 
         try:
-            # 尝试连接 Milvus (设置 3 秒超时限制，防死锁)
-            connections.connect(alias="default", host=self.host, port=self.port, timeout=3.0)
+            # 重置可能冲突的 default 连接别名
+            connected_aliases = [c[0] for c in connections.list_connections()]
+            if "default" in connected_aliases:
+                try:
+                    connections.disconnect("default")
+                except Exception:
+                    pass
+            
+            # 尝试连接 Milvus (与 test_diagnose 一致，设为 5 秒超时)
+            connections.connect(alias="default", host=self.host, port=self.port, timeout=5.0)
             self._create_collections_if_not_exist()
-            print(f"【Milvus 成功】已成功建立与 {self.host}:{self.port} 的 Milvus 数据库连接。")
+            print(f"【Milvus 成功】已成功建立与 {self.host}:{self.port} 的 Milvus 数据库连接。", flush=True)
         except Exception as e:
-            print(f"【Milvus 降级】连接 Milvus 失败 ({e})，正在自动无缝降级为本地内存与文件模拟模式。")
+            print(f"【Milvus 降级】连接 Milvus 失败 ({e})，正在自动无缝降级为本地内存与文件模拟模式。", flush=True)
+            import traceback
+            traceback.print_exc()
             self._load_mock_data()
 
     def _load_mock_data(self):
@@ -126,6 +141,16 @@ class MilvusManager:
 
     def insert_footprint(self, user_id: str, item_name: str, item_type: str, metadata: dict = None, embedding: list[float] = None):
         """插入就餐足迹记录"""
+        # 拦截非合法菜品的垃圾长句与问句，保障 Milvus 数据的整洁度和去重准确度
+        invalid_keywords = ["怎么做", "推荐", "我想吃", "有什么", "什么菜", "？", "?", "！", "!", "，", ",", "。"]
+        max_name_length = 80 if item_type in {"business_area", "dining_context"} else 15
+        if len(item_name) > max_name_length or (
+            item_type not in {"business_area", "dining_context"}
+            and any(k in item_name for k in invalid_keywords)
+        ):
+            print(f"【Milvus 过滤】检测到非菜品垃圾输入 '{item_name}'，已拦截其作为就餐足迹写入 Milvus 历史。", flush=True)
+            return
+
         meta_str = json.dumps(metadata or {}, ensure_ascii=False)
         ts = int(time.time())
         emb = embedding or [0.0] * 1536  # 无嵌入则使用全 0 向量填充
@@ -166,6 +191,57 @@ class MilvusManager:
             res = self.fp_col.query(expr=expr, output_fields=["item_name"])
             recent_items = [item["item_name"] for item in res]
             return list(set(recent_items))
+
+    def search_similar_footprints(self, user_id: str, query_embedding: list[float], limit: int = 3, cutoff_days: int = 7) -> list[dict]:
+        """
+        在最近 cutoff_days 天的就餐足迹中，进行向量近似搜索 (Vector Search) 进行语义相似度去重匹配
+        """
+        cutoff_time = int(time.time()) - (cutoff_days * 24 * 3600)
+        
+        if self.is_mock:
+            # 离线模式模拟：在内存 mock 数据中进行同名或前缀的模糊模拟
+            results = []
+            for fp in self.mock_footprints:
+                if fp["user_id"] == user_id and fp["timestamp"] >= cutoff_time:
+                    results.append({
+                        "item_name": fp["item_name"],
+                        "distance": 0.0 # 模拟完全相似度，由于 mock 不计算真实距离，让上层决定
+                    })
+            return results
+        else:
+            # 在 Milvus 库中利用 IVF_FLAT 索引进行 L2 距离的向量近似搜索
+            search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
+            expr = f"user_id == '{user_id}' and timestamp >= {cutoff_time}"
+            
+            # 第一阶段：仅检索出相似的主键 id 列表，避免直接指定 output_fields 导致 client 内部反序列化类型报错
+            res = self.fp_col.search(
+                data=[query_embedding],
+                anns_field="embedding",
+                param=search_params,
+                limit=limit,
+                expr=expr
+            )
+            
+            hits = []
+            if res and len(res) > 0 and len(res[0]) > 0:
+                pks = [hit.id for hit in res[0]]
+                # 记录距离映射
+                dist_map = {hit.id: hit.distance for hit in res[0]}
+                
+                # 第二阶段：以主键列表执行 query，获取真实的字段内容
+                id_list_str = ", ".join(map(str, pks))
+                query_res = self.fp_col.query(
+                    expr=f"id in [{id_list_str}]",
+                    output_fields=["id", "item_name"]
+                )
+                
+                for item in query_res:
+                    pk_val = item["id"]
+                    hits.append({
+                        "item_name": item["item_name"],
+                        "distance": dist_map.get(pk_val, 99.0)
+                    })
+            return hits
 
     # --- 对话历史 (Chat History) 数据操作接口 ---
 

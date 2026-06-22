@@ -83,6 +83,8 @@ class FoodieGraph:
 
     def intent_parse_node(self, state: dict) -> dict:
         """Node: 意图解析节点，决定走家庭做菜还是外面就餐，并判断是否包含意图穿透"""
+        if state.get("mode") in {"home_cooking", "dining_out"}:
+            return state
         user_input = state.get("user_input", "")
         user_input_lower = user_input.lower()
         
@@ -99,9 +101,12 @@ class FoodieGraph:
         user_id = state.get("user_id", "anonymous")
         user_input = state.get("user_input", "")
         disease = state.get("current_disease", "")
+        diners = state.get("dining_people_count", 1)
+        session_id = state.get("session_id", "temp_session")
+        selected_items = state.get("selected_items") or []
         
         # 触发 ChefAgent 推理
-        res = await self.bot.get_recipe_recommendation(user_id, user_input, disease)
+        res = await self.bot.get_recipe_recommendation(user_id, user_input, disease, diners, session_id, selected_items)
         state.update(res)
         
         # 生成决策 PDF 报告
@@ -113,7 +118,8 @@ class FoodieGraph:
             "recommendation_text": res["recommendation_text"],
             "graph_rag_path": res["graph_rag_path"],
             "health_explanation": res["health_explanation"],
-            "navigation_info": None
+            "navigation_info": None,
+            "image_url": res.get("image_url", "")
         }
         final_path = self.report_gen.generate_report(state["session_id"], report_data, pdf_path)
         state["report_path"] = final_path
@@ -126,8 +132,12 @@ class FoodieGraph:
         user_input = state.get("user_input", "")
         disease = state.get("current_disease", "")
         location = state.get("location", "五道口")
+        diners = state.get("dining_people_count", 1)
+        budget = state.get("budget", 150)
+        session_id = state.get("session_id", "temp_session")
+        business_area_context = state.get("business_area_context") or {}
         
-        res = await self.bot.get_restaurant_recommendation(user_id, location, user_input, disease)
+        res = await self.bot.get_restaurant_recommendation(user_id, location, user_input, disease, budget, diners, session_id, business_area_context)
         state.update(res)
         
         # 生成决策 PDF 报告
@@ -139,7 +149,10 @@ class FoodieGraph:
             "recommendation_text": res["recommendation_text"],
             "graph_rag_path": res["graph_rag_path"],
             "health_explanation": res["health_explanation"],
-            "navigation_info": res["navigation_info"]
+            "navigation_info": res["navigation_info"],
+            "selected_recommendation": (res.get("recommendations") or [{}])[0],
+            "after_meal_places": ((res.get("recommendations") or [{}])[0].get("after_meal_places") if res.get("recommendations") else []),
+            "image_url": res.get("image_url", "")
         }
         final_path = self.report_gen.generate_report(state["session_id"], report_data, pdf_path)
         state["report_path"] = final_path

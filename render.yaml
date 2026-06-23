@@ -3,7 +3,7 @@ services:
     name: superfoodie-cs599
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt && aione setup
+    buildCommand: pip install -r requirements.txt && aione setup --upstream-root upstreams && aione xhs note search --query test --page 1 --dry-run --output json
     startCommand: uvicorn src.api.routes:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION

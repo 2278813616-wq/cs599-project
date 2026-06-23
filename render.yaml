@@ -33,9 +33,9 @@ services:
       - key: HOME_RECIPE_XHS_RACE_MODE
         value: "1"
       - key: HOME_RECIPE_XHS_BASELINE_EXTRA_WAIT_SECONDS
-        value: "8"
+        value: "25"
       - key: HOME_RECIPE_XHS_TOTAL_CAP_SECONDS
-        value: "24"
+        value: "25"
       - key: HOME_RECIPE_PLAN_MAX_TOKENS
         value: "500"
       - key: HOME_RECIPE_DETAIL_MAX_TOKENS
@@ -49,9 +49,9 @@ services:
       - key: AIONE_CLI_PATH
         value: aione
       - key: AIONE_TIMEOUT_SECONDS
-        value: "20"
+        value: "25"
       - key: AIONE_XHS_HOME_DETAIL_CANDIDATE_LIMIT
-        value: "3"
+        value: "1"
       - key: AIONE_XHS_HOME_DETAIL_TIMEOUT_SECONDS
         value: "25"
       - key: AIONE_XHS_PROBE_TIMEOUT_SECONDS
@@ -59,7 +59,7 @@ services:
       - key: AIONE_XHS_SEARCH_CANDIDATE_LIMIT
         value: "6"
       - key: AIONE_XHS_DETAIL_LIMIT
-        value: "3"
+        value: "1"
       - key: AIONE_XHS_RECIPE_EXTRACT_TIMEOUT_SECONDS
         value: "12"
       - key: AIONE_XHS_RECIPE_SKIP_WEAK_TEXT

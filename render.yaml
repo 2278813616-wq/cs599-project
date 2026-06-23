@@ -47,7 +47,7 @@ services:
       - key: AIONE_XHS_HOME_DETAIL_TIMEOUT_SECONDS
         value: "25"
       - key: AIONE_XHS_PROBE_TIMEOUT_SECONDS
-        value: "6"
+        value: "20"
       - key: AIONE_XHS_SEARCH_CANDIDATE_LIMIT
         value: "6"
       - key: AIONE_XHS_DETAIL_LIMIT

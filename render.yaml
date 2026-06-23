@@ -25,7 +25,7 @@ services:
       - key: LLM_TIMEOUT_SECONDS
         value: "35"
       - key: HOME_RECIPE_SOURCE_MODE
-        value: xhs_first
+        value: tavily_only
       - key: HOME_RECIPE_XHS_WAIT_SECONDS
         value: "8"
       - key: HOME_RECIPE_SKIP_XHS_PROBE

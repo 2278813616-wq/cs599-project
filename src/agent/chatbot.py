@@ -945,11 +945,22 @@ class FoodieChatbot:
             except Exception as exc:
                 xhs_probe = {"available": False, "candidate_count": 0, "reason": type(exc).__name__, "debug_timeline": []}
                 logger.log("xhs_probe.done", {"available": False, "error": str(exc)[:300]})
+        xhs_probe_timeline = xhs_probe.get("debug_timeline") or []
         logger.log("xhs_probe.done", {
             "available": bool(xhs_probe.get("available")),
             "candidate_count": xhs_probe.get("candidate_count", 0),
             "reason": xhs_probe.get("reason", ""),
+            "debug_timeline": xhs_probe_timeline,
         })
+        xhs_probe_last_event = xhs_probe_timeline[-1] if xhs_probe_timeline else {}
+        safe_print(
+            "[XHS_PROBE_DIAG] "
+            f"available={bool(xhs_probe.get('available'))} "
+            f"candidate_count={xhs_probe.get('candidate_count', 0)} "
+            f"reason={xhs_probe.get('reason', '')} "
+            f"last_event={xhs_probe_last_event}",
+            flush=True,
+        )
         explicit_rewritten_query = ""
         if (original_query or "").strip():
             explicit_rewritten_query = rewrite_recipe_search_query(original_query, dining_people_count, disease).strip()

@@ -676,6 +676,8 @@ async def probe_xhs_available(query: str, limit: int = 3) -> dict:
         return {"available": False, "candidate_count": 0, "reason": type(exc).__name__, "debug_timeline": SEARCH_TIMELINE.get()}
 
     candidates = _extract_xhs_search_candidates(completed.stdout or "", query or "家常菜", limit=limit)
+    stdout_text = completed.stdout or ""
+    stderr_text = completed.stderr or ""
     available = completed.returncode == 0 and bool(candidates)
     _log_search_event(
         "xhs_probe.done",
@@ -683,7 +685,8 @@ async def probe_xhs_available(query: str, limit: int = 3) -> dict:
         available=available,
         returncode=completed.returncode,
         candidate_count=len(candidates),
-        stderr_preview=(completed.stderr or "")[:300],
+        stdout_preview=stdout_text[:800],
+        stderr_preview=stderr_text[:500],
     )
     return {
         "available": available,

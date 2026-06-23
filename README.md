@@ -91,6 +91,16 @@ python scripts/generate_coursework_report.py
 - `FOOD_SEARCH_MODE=online_first`，必要时允许本地缓存降级。
 
 Render 环境变量应在控制台填写，不要提交 `.env`：
+最终部署链接
+https://superfoodie-cs599.onrender.com/
+
+## Online Stable Version
+
+- Stable URL: https://superfoodie-cs599.onrender.com
+- Current production mode uses `HOME_RECIPE_SOURCE_MODE=tavily_only`.
+- In this stable version, Qwen generates structured recipe details and Tavily provides finished-dish images. If Tavily is unavailable, the app falls back to local images.
+- XHS integration was tested on Render after `aione setup --upstream-root upstreams`. The CLI command registration issue was fixed, but recipe-detail retrieval remained unstable: even a single XHS card with a 25 second cap did not reliably return usable note content before timeout.
+- Because of that, XHS is not used in the synchronous production path. Future XHS work should use card-level asynchronous refresh: return Qwen + Tavily first, continue XHS in the background, and replace a card only if XHS succeeds later.
 
 ```text
 LLM_API_KEY

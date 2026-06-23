@@ -16,14 +16,52 @@ services:
         value: online_first
       - key: FOOD_SEARCH_ALLOW_FALLBACK
         value: "1"
+      - key: LLM_API_BASE
+        value: https://dashscope.aliyuncs.com/compatible-mode/v1
+      - key: LLM_MODEL
+        value: qwen3.5-plus
+      - key: LLM_SEND_ENABLE_THINKING
+        value: "1"
+      - key: LLM_TIMEOUT_SECONDS
+        value: "35"
       - key: HOME_RECIPE_SOURCE_MODE
         value: xhs_first
       - key: HOME_RECIPE_XHS_WAIT_SECONDS
         value: "25"
+      - key: HOME_RECIPE_PLAN_MAX_TOKENS
+        value: "500"
+      - key: HOME_RECIPE_DETAIL_MAX_TOKENS
+        value: "850"
+      - key: HOME_RECIPE_DETAIL_REQUEST_TIMEOUT_SECONDS
+        value: "25"
+      - key: HOME_RECIPE_DETAIL_TIMEOUT_SECONDS
+        value: "30"
       - key: AIONE_ENABLED
         value: "1"
       - key: AIONE_CLI_PATH
         value: aione
+      - key: AIONE_TIMEOUT_SECONDS
+        value: "20"
+      - key: AIONE_XHS_HOME_DETAIL_CANDIDATE_LIMIT
+        value: "3"
+      - key: AIONE_XHS_HOME_DETAIL_TIMEOUT_SECONDS
+        value: "25"
+      - key: AIONE_XHS_PROBE_TIMEOUT_SECONDS
+        value: "6"
+      - key: AIONE_XHS_SEARCH_CANDIDATE_LIMIT
+        value: "6"
+      - key: AIONE_XHS_DETAIL_LIMIT
+        value: "3"
+      - key: AIONE_XHS_RECIPE_EXTRACT_TIMEOUT_SECONDS
+        value: "12"
+      - key: AIONE_XHS_RECIPE_SKIP_WEAK_TEXT
+        value: "0"
+      - key: AIONE_XHS_REFRESH_WEAK_CACHE
+        value: "1"
+      - key: AIONE_XHS_TAVILY_FALLBACK
+        value: "1"
+      - key: AIONE_XHS_TAVILY_MAX_RESULTS
+        value: "5"
       - key: AIONE_XHS_COMMENT_STORE_LOOKUP
         value: "0"
       - key: MILVUS_FORCE_MOCK
@@ -35,6 +73,8 @@ services:
       - key: GAODE_MAP_TIMEOUT_SECONDS
         value: "5"
       - key: LLM_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
         sync: false
       - key: GAODE_API_KEY
         sync: false

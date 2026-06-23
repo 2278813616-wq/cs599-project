@@ -25,11 +25,17 @@ services:
       - key: LLM_TIMEOUT_SECONDS
         value: "35"
       - key: HOME_RECIPE_SOURCE_MODE
-        value: tavily_only
+        value: xhs_first
       - key: HOME_RECIPE_XHS_WAIT_SECONDS
         value: "8"
       - key: HOME_RECIPE_SKIP_XHS_PROBE
         value: "1"
+      - key: HOME_RECIPE_XHS_RACE_MODE
+        value: "1"
+      - key: HOME_RECIPE_XHS_BASELINE_EXTRA_WAIT_SECONDS
+        value: "8"
+      - key: HOME_RECIPE_XHS_TOTAL_CAP_SECONDS
+        value: "24"
       - key: HOME_RECIPE_PLAN_MAX_TOKENS
         value: "500"
       - key: HOME_RECIPE_DETAIL_MAX_TOKENS

@@ -1165,6 +1165,7 @@ class FoodieChatbot:
                 return None
             local_recipe = (_search_recipes_from_local_cache(cand_name, 1, excludes) or [{}])[0]
 
+            candidate_started = time.perf_counter()
             image_task = asyncio.create_task(_image_info_for_candidate(item, cand_name))
             llm_task = asyncio.create_task(self._generate_recipe_detail_with_llm(item, dining_people_count, disease, logger))
             xhs_task = None
@@ -1172,7 +1173,101 @@ class FoodieChatbot:
                 xhs_task = asyncio.create_task(_xhs_recipe_for_candidate(item, excludes))
 
             xhs_recipe = None
-            if xhs_task:
+            image_info = None
+            llm_recipe = None
+            xhs_race_mode = os.getenv("HOME_RECIPE_XHS_RACE_MODE", "0") == "1"
+
+            async def _read_xhs_task(task: asyncio.Task, reason: str) -> dict | None:
+                try:
+                    recipe = await task
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    logger.log("recipe_detail.xhs.done", {
+                        "name": cand_name,
+                        "success": False,
+                        "error_type": type(exc).__name__,
+                        "error": str(exc)[:300],
+                    })
+                    return None
+                if recipe:
+                    logger.log("recipe_detail.xhs.adopted", {
+                        "name": cand_name,
+                        "reason": reason,
+                        "elapsed_ms": int((time.perf_counter() - candidate_started) * 1000),
+                    })
+                    return recipe
+                logger.log("recipe_detail.xhs.skipped", {"name": cand_name, "reason": reason})
+                return None
+
+            if xhs_task and xhs_race_mode:
+                pending = {llm_task, image_task, xhs_task}
+                while pending:
+                    done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+                    if xhs_task in done:
+                        xhs_recipe = await _read_xhs_task(xhs_task, "xhs_completed_before_baseline")
+                        if xhs_recipe:
+                            if not llm_task.done():
+                                llm_task.cancel()
+                            if not image_task.done():
+                                image_task.cancel()
+                            llm_recipe = None
+                            image_info = {"image_urls": [], "source_url": "", "debug_timeline": []}
+                            break
+                    if llm_task.done() and image_task.done():
+                        llm_recipe = await llm_task
+                        image_info = await image_task
+                        logger.log("recipe_detail.baseline.ready", {
+                            "name": cand_name,
+                            "elapsed_ms": int((time.perf_counter() - candidate_started) * 1000),
+                            "xhs_done": bool(xhs_task.done()),
+                        })
+                        if xhs_task.done():
+                            xhs_recipe = await _read_xhs_task(xhs_task, "xhs_completed_with_baseline")
+                        else:
+                            extra_wait = max(0.0, float(os.getenv("HOME_RECIPE_XHS_BASELINE_EXTRA_WAIT_SECONDS", "8") or "8"))
+                            total_cap = max(extra_wait, float(os.getenv("HOME_RECIPE_XHS_TOTAL_CAP_SECONDS", "24") or "24"))
+                            elapsed = time.perf_counter() - candidate_started
+                            wait_seconds = min(extra_wait, max(0.0, total_cap - elapsed))
+                            if wait_seconds > 0:
+                                logger.log("recipe_detail.xhs.extra_wait", {
+                                    "name": cand_name,
+                                    "wait_seconds": round(wait_seconds, 3),
+                                    "elapsed_ms": int(elapsed * 1000),
+                                })
+                                try:
+                                    xhs_recipe = await asyncio.wait_for(asyncio.shield(xhs_task), timeout=wait_seconds)
+                                    if xhs_recipe:
+                                        logger.log("recipe_detail.xhs.adopted", {
+                                            "name": cand_name,
+                                            "reason": "xhs_completed_after_baseline_extra_wait",
+                                            "elapsed_ms": int((time.perf_counter() - candidate_started) * 1000),
+                                        })
+                                    else:
+                                        logger.log("recipe_detail.xhs.skipped", {"name": cand_name, "reason": "empty_after_extra_wait"})
+                                except asyncio.TimeoutError:
+                                    xhs_task.cancel()
+                                    logger.log("recipe_detail.xhs.skipped", {
+                                        "name": cand_name,
+                                        "reason": "extra_wait_timeout",
+                                        "timeout_seconds": wait_seconds,
+                                    })
+                                except Exception as exc:
+                                    logger.log("recipe_detail.xhs.done", {
+                                        "name": cand_name,
+                                        "success": False,
+                                        "error_type": type(exc).__name__,
+                                        "error": str(exc)[:300],
+                                    })
+                            else:
+                                xhs_task.cancel()
+                                logger.log("recipe_detail.xhs.skipped", {"name": cand_name, "reason": "total_cap_reached"})
+                        break
+                if llm_recipe is None and not xhs_recipe:
+                    llm_recipe = await llm_task
+                if image_info is None and not xhs_recipe:
+                    image_info = await image_task
+            elif xhs_task:
                 xhs_soft_wait = max(1.0, float(os.getenv("HOME_RECIPE_XHS_WAIT_SECONDS", "10") or "10"))
                 try:
                     xhs_recipe = await asyncio.wait_for(xhs_task, timeout=xhs_soft_wait)
@@ -1191,8 +1286,11 @@ class FoodieChatbot:
                         "error_type": type(exc).__name__,
                         "error": str(exc)[:300],
                     })
-            llm_recipe = await llm_task
-            image_info = await image_task
+                llm_recipe = await llm_task
+                image_info = await image_task
+            else:
+                llm_recipe = await llm_task
+                image_info = await image_task
             image_urls = image_info.get("image_urls") or []
 
             if xhs_recipe:

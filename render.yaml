@@ -16,6 +16,10 @@ services:
         value: online_first
       - key: FOOD_SEARCH_ALLOW_FALLBACK
         value: "1"
+      - key: HOME_RECIPE_SOURCE_MODE
+        value: xhs_first
+      - key: HOME_RECIPE_XHS_WAIT_SECONDS
+        value: "25"
       - key: AIONE_ENABLED
         value: "1"
       - key: AIONE_CLI_PATH

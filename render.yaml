@@ -76,6 +76,8 @@ services:
         sync: false
       - key: TAVILY_API_KEY
         sync: false
+      - key: TAVILY_IMAGE_TIMEOUT_SECONDS
+        value: "20"
       - key: GAODE_API_KEY
         sync: false
       - key: GAODE_JS_API_KEY

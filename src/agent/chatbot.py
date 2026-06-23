@@ -934,11 +934,19 @@ class FoodieChatbot:
             all_eaten_names,
             logger,
         ))
+        skip_xhs_probe = os.getenv("HOME_RECIPE_SKIP_XHS_PROBE", "0") == "1"
         xhs_probe_task = None
-        if xhs_probe_enabled:
+        if xhs_probe_enabled and not skip_xhs_probe:
             xhs_probe_task = asyncio.create_task(probe_xhs_available(xhs_probe_query, limit=3))
         planned_candidates = await menu_plan_task
         xhs_probe = {"available": False, "candidate_count": 0, "reason": "disabled", "debug_timeline": []}
+        if xhs_probe_enabled and skip_xhs_probe:
+            xhs_probe = {
+                "available": True,
+                "candidate_count": 0,
+                "reason": "skipped_optimistic",
+                "debug_timeline": [{"event": "xhs_probe.skipped", "reason": "HOME_RECIPE_SKIP_XHS_PROBE=1"}],
+            }
         if xhs_probe_task:
             try:
                 xhs_probe = await xhs_probe_task

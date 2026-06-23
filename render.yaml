@@ -27,7 +27,9 @@ services:
       - key: HOME_RECIPE_SOURCE_MODE
         value: xhs_first
       - key: HOME_RECIPE_XHS_WAIT_SECONDS
-        value: "25"
+        value: "8"
+      - key: HOME_RECIPE_SKIP_XHS_PROBE
+        value: "1"
       - key: HOME_RECIPE_PLAN_MAX_TOKENS
         value: "500"
       - key: HOME_RECIPE_DETAIL_MAX_TOKENS
